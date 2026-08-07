@@ -6,7 +6,6 @@ import logging.config
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-from tortoise.contrib.fastapi import register_tortoise
 
 from app.api.main import api_router
 from app.config import settings
@@ -31,13 +30,6 @@ app.add_middleware(
 
 app.include_router(api_router, prefix="/api")
 
-register_tortoise(
-    app,
-    config=settings.TORTOISE_ORM,
-    generate_schemas=False,
-    add_exception_handlers=True,
-)
-
 @app.middleware("http")
 async def log_request_middleware(request: Request, call_next):
     start_time = time.time()
@@ -52,12 +44,18 @@ async def log_request_middleware(request: Request, call_next):
     path_params = request.path_params
 
     body_bytes = await request.body()
+    content_type = request.headers.get("content-type", "")
     body = None
     if body_bytes:
-        try:
-            body = json.loads(body_bytes)
-        except Exception:
-            body = body_bytes.decode("utf-8")
+        if "application/json" in content_type:
+            try:
+                body = json.loads(body_bytes)
+            except Exception:
+                body = body_bytes.decode("utf-8", errors="replace")
+        elif "multipart/form-data" in content_type:
+            body = "<multipart/form-data>"
+        else:
+            body = body_bytes.decode("utf-8", errors="replace")
 
     async def receive():
         return {"type": "http.request", "body": body_bytes}

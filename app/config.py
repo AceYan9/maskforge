@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 
 
 class Settings:
@@ -13,6 +14,10 @@ class Settings:
     WRITE_RATE_LIMIT = int(os.getenv("WRITE_RATE_LIMIT", 30))
     IP_RATE_LIMIT = int(os.getenv("IP_RATE_LIMIT", 600))
     RATE_LIMIT_WINDOW = int(os.getenv("RATE_LIMIT_WINDOW", 60))
+
+    PROJECT_ROOT = Path(__file__).resolve().parent.parent
+    TASK_DIR = PROJECT_ROOT / "data" / "tasks"
+    TASK_DIR.mkdir(parents=True, exist_ok=True)
 
 
 settings = Settings()

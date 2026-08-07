@@ -15,3 +15,8 @@ async def upload_file(file: UploadFile = Depends(validate_excel_file)):
     command = TaskCreateCommand(file)
     task_id = await command.run()
     return {"data": {"task_id": task_id}}
+
+
+@router.get("", response_model=ApiResponse, summary="Upload file")
+async def test_func():
+    return {"data": None}

@@ -1,7 +1,7 @@
-import asyncio
-
+from app.config import settings
 from app.celery_app import celery_app, BaseTask
 from app.models import Task
+from app.utils.file_analyze import FileAnalyzer
 
 
 class ProcessFileTask(BaseTask):
@@ -18,7 +18,9 @@ class ProcessFileTask(BaseTask):
             return
 
         # todo get the number of rows, columns, and sample data of up to 100 rows
-        print("processing")
+        analyzer = FileAnalyzer(task.source_object, task.file_type)
+        result = await analyzer()
+        print(result)
 
 
 process_file = celery_app.register_task(ProcessFileTask())

@@ -60,5 +60,7 @@ class Settings:
         "timezone": "UTC",
     }
 
+    FILE_SAMPLE_MAX_SIZE = 100
+
 
 settings = Settings()

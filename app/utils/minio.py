@@ -36,3 +36,10 @@ async def upload_files(task_id: str, files: list[UploadFile] = File(...)):
         result.append(object_name)
 
     return result
+
+
+async def get_file(object_name: str):
+    return client.get_object(
+        settings.MINIO_BUCKET,
+        object_name,
+    )

@@ -7,6 +7,7 @@ from celery import Celery
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from tortoise.contrib.fastapi import register_tortoise
 
 from app.api.main import api_router
 from app.config import settings
@@ -32,7 +33,7 @@ app.add_middleware(
 celery_app = Celery(
     settings.PROJECT_NAME,
     broker=settings.CELERY_BROKER_URL,
-    backend=settings.CELERY_RESULT_BACKEND,
+    backend=settings.CELERY_BACKEND_URL,
 )
 celery_app.conf.update(
     task_track_started=True,
@@ -42,6 +43,13 @@ celery_app.conf.update(
 )
 
 app.include_router(api_router, prefix="/api")
+
+register_tortoise(
+    app,
+    config=settings.TORTOISE_ORM,
+    generate_schemas=False,
+    add_exception_handlers=True,
+)
 
 @app.middleware("http")
 async def log_request_middleware(request: Request, call_next):

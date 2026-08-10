@@ -17,5 +17,5 @@ class Task(BaseModel):
     file_type = fields.CharField(max_length=20)
     file_size = fields.BigIntField()
     source_object = fields.CharField(max_length=500)
-    total_rows = fields.BigIntField()
-    total_columns = fields.IntField()
+    total_rows = fields.BigIntField(null=True, default=None)
+    total_columns = fields.IntField(null=True, default=None)

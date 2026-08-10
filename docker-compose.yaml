@@ -44,7 +44,7 @@ services:
     build: .
     working_dir: /app
     command:
-      celery -A app.main.celery_app worker -l info
+      celery -A app.celery_app.celery_app worker -l info
     env_file:
       - .env
     depends_on:

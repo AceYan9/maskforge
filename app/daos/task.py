@@ -8,6 +8,7 @@ from fastapi import UploadFile
 from app.models import Task
 from app.utils.common import get_file_size
 from app.utils.minio import upload_files
+from app.utils.async_tasks import process_file
 
 logger = logging.getLogger(__name__)
 
@@ -25,10 +26,7 @@ class TaskDAO:
     async def create_task(cls, file: UploadFile) -> str:
         task_id = await cls.generate_task_id()
         file_size = await get_file_size(file)
-        df = await cls.read_file(file)
-        total_rows = len(df)
         source_objects = await upload_files(task_id, [file])
-        logger.info(f"{task_id=} {file.filename=} {file.filename.rsplit(".")[-1]=} {file_size=} {source_objects[0]} {total_rows=} {df.columns=}")
 
         await Task.create(
             task_id=task_id,
@@ -36,9 +34,8 @@ class TaskDAO:
             file_type=file.filename.rsplit(".")[-1],
             file_size=file_size,
             source_object=source_objects[0],
-            total_rows=total_rows,
-            total_columns=len(df.columns),
         )
+        process_file.delay(task_id)
 
         return task_id
 

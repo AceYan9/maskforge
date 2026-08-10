@@ -4,7 +4,6 @@ import uuid
 import logging.config
 from contextlib import asynccontextmanager
 
-from celery import Celery
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -37,18 +36,6 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
-)
-
-celery_app = Celery(
-    settings.PROJECT_NAME,
-    broker=settings.CELERY_BROKER_URL,
-    backend=settings.CELERY_BACKEND_URL,
-)
-celery_app.conf.update(
-    task_track_started=True,
-    timezone="Asia/Shanghai",
-    enable_utc=True,
-    result_expires=60 * 60,
 )
 
 app.include_router(api_router, prefix="/api")

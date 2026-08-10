@@ -1,6 +1,6 @@
 services:
 
-  postgres:
+  maskforge-postgres:
     image: postgres:17
     env_file:
       - .env
@@ -9,7 +9,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
-  minio:
+  maskforge-minio:
     image: minio/minio
     command: server /data --console-address ":9001"
     ports:
@@ -20,12 +20,12 @@ services:
     volumes:
       - minio_data:/data
 
-  redis:
+  maskforge-redis:
     image: redis:7
     ports:
-      - "6379:6379"
+      - "26379:6379"
 
-  app:
+  maskforge-app:
     build: .
     working_dir: /app
     command: >
@@ -36,11 +36,11 @@ services:
     env_file:
       - .env
     depends_on:
-      - postgres
-      - minio
-      - redis
+      - maskforge-postgres
+      - maskforge-minio
+      - maskforge-redis
 
-  worker:
+  maskforge-worker:
     build: .
     working_dir: /app
     command:
@@ -48,8 +48,8 @@ services:
     env_file:
       - .env
     depends_on:
-      - redis
-      - postgres
+      - maskforge-redis
+      - maskforge-postgres
 
 
 volumes:

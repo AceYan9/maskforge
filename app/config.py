@@ -18,15 +18,21 @@ class Settings:
     CELERY_BROKER_URL = f"redis://@{REDIS_HOST}:{REDIS_PORT}/1"
     CELERY_BACKEND_URL = f"redis://@{REDIS_HOST}:{REDIS_PORT}/2"
 
+    MINIO_ENDPOINT = f"{os.getenv('MINIO_HOST', 'localhost')}:{os.getenv('MINIO_PORT', '9000')}"
+    MINIO_ACCESS_KEY = os.getenv(
+        "MINIO_ROOT_USER",
+        "minioadmin"
+    )
+    MINIO_SECRET_KEY = os.getenv(
+        "MINIO_ROOT_PASSWORD",
+        "minioadmin"
+    )
+    MINIO_BUCKET = "maskforge"
+
     USER_RATE_LIMIT = int(os.getenv("USER_RATE_LIMIT", 120))
     WRITE_RATE_LIMIT = int(os.getenv("WRITE_RATE_LIMIT", 30))
     IP_RATE_LIMIT = int(os.getenv("IP_RATE_LIMIT", 600))
     RATE_LIMIT_WINDOW = int(os.getenv("RATE_LIMIT_WINDOW", 60))
-
-    # todo delete
-    PROJECT_ROOT = Path(__file__).resolve().parent.parent
-    TASK_DIR = PROJECT_ROOT / "data" / "tasks"
-    TASK_DIR.mkdir(parents=True, exist_ok=True)
 
     TORTOISE_ORM = {
         "connections": {

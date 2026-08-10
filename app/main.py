@@ -2,6 +2,7 @@ import json
 import time
 import uuid
 import logging.config
+from contextlib import asynccontextmanager
 
 from celery import Celery
 from fastapi import FastAPI, Request
@@ -13,13 +14,21 @@ from app.api.main import api_router
 from app.config import settings
 from app.logging_config import LOGGING_CONFIG, request_id_ctx
 from app.utils.exception_handler import BizException
+from app.utils.minio import init_bucket
 
 
 logging.config.dictConfig(LOGGING_CONFIG)
 logger = logging.getLogger(__name__)
 
+
+@asynccontextmanager
+async def lifespan(application: FastAPI):
+    init_bucket()
+    yield
+
 app = FastAPI(
     title=settings.PROJECT_NAME,
+    lifespan=lifespan,
 )
 
 app.add_middleware(

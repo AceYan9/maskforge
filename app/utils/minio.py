@@ -1,4 +1,7 @@
-import uuid
+import io
+import json
+from typing import Any
+from contextlib import contextmanager
 
 from minio import Minio
 from fastapi import UploadFile, File
@@ -25,7 +28,7 @@ def init_bucket():
 async def upload_files(task_id: str, files: list[UploadFile] = File(...)):
     result = []
     for file in files:
-        object_name = f"{task_id}/{uuid.uuid4()}-{file.filename}"
+        object_name = f"{task_id}/source/{file.filename}"
         client.put_object(
             settings.MINIO_BUCKET,
             object_name,
@@ -38,8 +41,28 @@ async def upload_files(task_id: str, files: list[UploadFile] = File(...)):
     return result
 
 
-async def get_file(object_name: str):
-    return client.get_object(
+@contextmanager
+def get_file(object_name: str):
+    obj = client.get_object(
         settings.MINIO_BUCKET,
         object_name,
     )
+    try:
+        yield obj
+    finally:
+        obj.close()
+        obj.release_conn()
+
+
+async def submit_analysis_data(task_id: str, data: list | dict, filename: str):
+    object_name = f"{task_id}/analysis/{filename}"
+    content = json.dumps(data, ensure_ascii=False, indent=2).encode("utf-8")
+
+    client.put_object(
+        settings.MINIO_BUCKET,
+        object_name,
+        io.BytesIO(content),
+        length=len(content),
+        content_type="application/json",
+    )
+    return object_name

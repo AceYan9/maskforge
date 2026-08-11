@@ -2,6 +2,7 @@ from app.celery_app import celery_app, BaseTask
 from app.models import Task
 from app.utils.file_analyze import FileAnalyzer
 from app.utils.minio import submit_analysis_data
+from app.utils.rule_analyze import RuleAnalyzer
 
 
 class ProcessFileTask(BaseTask):
@@ -20,7 +21,6 @@ class ProcessFileTask(BaseTask):
         # todo get the number of rows, columns, and sample data of up to 100 rows
         analyzer = FileAnalyzer(task.source_object, task.file_type)
         result = await analyzer()
-        headers = result["headers"]
         samples = result["samples"]
 
         task.total_rows = result["rows"]
@@ -28,6 +28,9 @@ class ProcessFileTask(BaseTask):
         await task.save()
 
         await submit_analysis_data(task_id, samples, "sample.json")
+
+        rule_analyzer = RuleAnalyzer(samples, result["headers"])
+        await rule_analyzer()
 
 
 process_file = celery_app.register_task(ProcessFileTask())

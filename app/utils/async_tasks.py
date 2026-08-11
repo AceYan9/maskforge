@@ -18,7 +18,6 @@ class ProcessFileTask(BaseTask):
         if not task:
             return
 
-        # todo get the number of rows, columns, and sample data of up to 100 rows
         analyzer = FileAnalyzer(task.source_object, task.file_type)
         result = await analyzer()
         samples = result["samples"]
@@ -30,7 +29,8 @@ class ProcessFileTask(BaseTask):
         await submit_analysis_data(task_id, samples, "sample.json")
 
         rule_analyzer = RuleAnalyzer(samples, result["headers"])
-        await rule_analyzer()
+        recommended_rule = await rule_analyzer()
+        print(recommended_rule)
 
 
 process_file = celery_app.register_task(ProcessFileTask())

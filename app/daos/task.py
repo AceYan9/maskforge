@@ -1,19 +1,22 @@
+import json
 import uuid
 import logging
-import pandas as pd
-from pathlib import Path
 
 from fastapi import UploadFile
 
-from app.models import Task
+from app.models import Task, MaskRule
 from app.utils.common import get_file_size
-from app.utils.minio import upload_files
+from app.utils.minio import upload_files, get_file
 from app.utils.async_tasks import process_file
 
 logger = logging.getLogger(__name__)
 
 
 class TaskDAO:
+
+    @staticmethod
+    async def get_task_by_task_id(task_id: str) -> Task:
+        return await Task.get_or_none(task_id=task_id)
 
     @staticmethod
     async def generate_task_id():
@@ -40,17 +43,25 @@ class TaskDAO:
         return task_id
 
     @staticmethod
-    async def read_file(file: UploadFile) -> pd.DataFrame:
-        suffix = Path(file.filename).suffix.lower()
+    async def get_task_detail(task: Task):
+        data = {
+            "status": task.status,
+            "filename": task.filename,
+            "rows": task.total_rows,
+        }
+        with get_file(f"{task.task_id}/analysis/sample.json") as obj:
+            data["sample_data"] = json.loads(obj.read().decode("utf-8"))
+        with get_file(f"{task.task_id}/analysis/header.json") as obj:
+            headers = json.loads(obj.read().decode("utf-8"))
+            data["columns"] = headers
 
-        if suffix == ".csv":
-            return pd.read_csv(file.file)
-
-        elif suffix == ".xls":
-            return pd.read_excel(file.file, engine="xlrd")
-
-        elif suffix == ".xlsx":
-            return pd.read_excel(file.file, engine="openpyxl")
-
+        recommended_rule = None
+        if mask_rule := await MaskRule.get_or_none(task_id=task.task_id):
+            recommended_rule = mask_rule.rules
         else:
-            raise ValueError(f"不支持的文件类型: {suffix}")
+            with get_file(f"{task.task_id}/analysis/recommended_rule.json") as obj:
+                recommended_rule = json.loads(obj.read().decode("utf-8"))
+
+        data["recommended_rule"] = {header: recommended_rule.get(header) or {} for header in headers}
+
+        return data

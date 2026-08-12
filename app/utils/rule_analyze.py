@@ -47,11 +47,22 @@ class RuleAnalyzer:
 
     @staticmethod
     async def _get_email_rule_config():
-        return {}
+        return {
+            "rule_type": "left_mask",
+            "anchor": "@",
+            "anchor_side": "left",
+            "count": 4,
+            "mask_char": "*",
+        }
 
     @staticmethod
     async def _get_id_card_rule_config():
-        return {}
+        return {
+            "rule_type": "middle_mask",
+            "left_save_count": 4,
+            "right_save_count": 3,
+            "mask_char": "*",
+        }
 
     @staticmethod
     async def _get_date_rule_config():

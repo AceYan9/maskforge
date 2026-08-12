@@ -17,4 +17,7 @@ class BothSidesMaskRule(MaskRule):
         right_count = config.get("right_count", 1)
         char = config.get("mask_char", "*")
 
+        if left_count + right_count >= length:
+            return char * length
+
         return char * left_count + value[left_count: (length - right_count)] + char * right_count

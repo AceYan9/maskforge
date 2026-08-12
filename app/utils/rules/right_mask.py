@@ -12,8 +12,15 @@ class RightMaskRule(MaskRule):
         if value is None:
             return value
 
-        length = len(value)
+        anchor_side = config.get("anchor_side", "left")
+        anchor = config.get("anchor") or ""
+        mask_value, unchange_value = self._handle_value_with_anchor(value, anchor, anchor_side)
+
         count = config.get("count", 1)
         char = config.get("mask_char", "*")
 
-        return value[:(length - count)] + char * count
+        mask_count = min(count, len(mask_value))
+        masked_value = mask_value[:mask_count] + char * mask_count
+        if not unchange_value:
+            return masked_value
+        return (masked_value + anchor + unchange_value) if anchor_side == "left" else (unchange_value + anchor + masked_value)

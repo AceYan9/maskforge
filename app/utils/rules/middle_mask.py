@@ -16,6 +16,8 @@ class MiddleMaskRule(MaskRule):
         left_save_count = config.get("left_save_count", 1)
         right_save_count = config.get("right_save_count", 1)
         count = length - left_save_count - right_save_count
+        if count <= 0:
+            return value
         char = config.get("mask_char", "*")
 
         return value[:left_save_count] + char * count + value[left_save_count + count:]

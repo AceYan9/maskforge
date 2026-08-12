@@ -30,7 +30,7 @@ class ProcessFileTask(BaseTask):
 
         rule_analyzer = RuleAnalyzer(samples, result["headers"])
         recommended_rule = await rule_analyzer()
-        print(recommended_rule)
+        await submit_analysis_data(task_id, recommended_rule, "recommended_rule.json")
 
 
 process_file = celery_app.register_task(ProcessFileTask())

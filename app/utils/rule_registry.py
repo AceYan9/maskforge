@@ -1,4 +1,7 @@
+import logging
+
 RULES = {}
+logger = logging.getLogger(__name__)
 
 
 def register(name):

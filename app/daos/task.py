@@ -65,3 +65,14 @@ class TaskDAO:
         data["recommended_rule"] = {header: recommended_rule.get(header) or {} for header in headers}
 
         return data
+
+    @staticmethod
+    async def upsert_mask_rule(task: Task, rules: dict):
+        if mask_rule := await MaskRule.get_or_none(task_id=task.task_id):
+            mask_rule.rules = rules
+            await mask_rule.save()
+        else:
+            await MaskRule.create(
+                task_id=task.task_id,
+                rules=rules,
+            )

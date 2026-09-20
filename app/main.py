@@ -14,6 +14,8 @@ from app.config import settings
 from app.logging_config import LOGGING_CONFIG, request_id_ctx
 from app.utils.exception_handler import BizException
 from app.utils.minio import init_bucket
+# Ensure that the rule is successfully registered
+from app.utils import rules
 
 
 logging.config.dictConfig(LOGGING_CONFIG)

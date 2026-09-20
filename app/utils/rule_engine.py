@@ -1,4 +1,8 @@
+import logging
+
 from app.utils.rule_registry import get_rule
+
+logger = logging.getLogger(__name__)
 
 
 class MaskEngine:
@@ -10,13 +14,17 @@ class MaskEngine:
             if column not in result.columns:
                 continue
 
+            logger.info(f"{column=} {result[column]=} {rule=}")
             result[column] = result[column].apply(lambda x: self.apply_value(x, rule))
 
         return result
 
     @staticmethod
     def apply_value(value, rule):
-        rule_type = rule["type"]
+        if not rule:
+            return value
+
+        rule_type = rule["rule_type"]
         handler = get_rule(rule_type)
 
         if not handler:

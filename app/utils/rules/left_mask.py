@@ -1,7 +1,10 @@
+import logging
 from typing import Any
 
 from app.utils.rules.base import MaskRule
 from app.utils.rule_registry import register
+
+logger = logging.getLogger(__name__)
 
 
 @register("left_mask")

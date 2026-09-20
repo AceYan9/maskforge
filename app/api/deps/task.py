@@ -52,7 +52,7 @@ async def validate_excel_file(file: UploadFile) -> UploadFile:
     return file
 
 
-async def get_task(task_id: str):
+async def get_task_obj(task_id: str):
     task = await TaskDAO.get_task_by_task_id(task_id=task_id)
     if task is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Task not found")

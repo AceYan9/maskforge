@@ -62,7 +62,16 @@ class TaskDAO:
             with get_file(f"{task.task_id}/analysis/recommended_rule.json") as obj:
                 recommended_rule = json.loads(obj.read().decode("utf-8"))
 
-        data["recommended_rule"] = {header: recommended_rule.get(header) or {} for header in headers}
+        rules = {}
+        datetime_columns = []
+        for header in headers:
+            rule = recommended_rule.get(header) or {}
+            rules[header] = rule
+            if rule and rule.get("rule_type") in ("date", "time"):
+                datetime_columns.append(header)
+
+        data["rules"] = rules
+        data["datetime_columns"] = datetime_columns
 
         return data
 

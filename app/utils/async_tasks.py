@@ -1,5 +1,3 @@
-import asyncio
-
 from app.celery_app import celery_app, BaseTask
 from app.models import Task, TaskStatus
 from app.utils.file_analyze import FileAnalyzer

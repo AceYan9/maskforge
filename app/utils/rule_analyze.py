@@ -3,7 +3,7 @@ from app.utils.recognizer.engine import RecognizerEngine
 from app.utils.recognizer.plugins.phone import PhoneRecognizer
 from app.utils.recognizer.plugins.email import EmailRecognizer
 from app.utils.recognizer.plugins.id_card import IDCardRecognizer
-from app.utils.recognizer.plugins.date import DateRecognizer
+from app.utils.recognizer.plugins.date import DateRecognizer, TimeRecognizer
 
 
 engine = RecognizerEngine()
@@ -11,6 +11,7 @@ engine.register(PhoneRecognizer())
 engine.register(EmailRecognizer())
 engine.register(IDCardRecognizer())
 engine.register(DateRecognizer())
+engine.register(TimeRecognizer())
 
 
 class RuleAnalyzer:
@@ -34,10 +35,10 @@ class RuleAnalyzer:
             return {}
 
         func = getattr(self, f"_get_{recognize_type}_rule_config")
-        return await func()
+        return await func(recognize_data)
 
     @staticmethod
-    async def _get_phone_rule_config():
+    async def _get_phone_rule_config(data: dict = None):
         return {
             "rule_type": "middle_mask",
             "left_save_count": 3,
@@ -46,7 +47,7 @@ class RuleAnalyzer:
         }
 
     @staticmethod
-    async def _get_email_rule_config():
+    async def _get_email_rule_config(data: dict = None):
         return {
             "rule_type": "left_mask",
             "anchor": "@",
@@ -56,7 +57,7 @@ class RuleAnalyzer:
         }
 
     @staticmethod
-    async def _get_id_card_rule_config():
+    async def _get_id_card_rule_config(data: dict = None):
         return {
             "rule_type": "middle_mask",
             "left_save_count": 4,
@@ -65,5 +66,23 @@ class RuleAnalyzer:
         }
 
     @staticmethod
-    async def _get_date_rule_config():
-        return {}
+    async def _get_date_rule_config(data: dict = None):
+        return {
+            "rule_type": "date_offset_mask",
+            "format": data.get("format"),
+            "date_offset": {
+                "min": -12,
+                "max": 12,
+            }
+        }
+
+    @staticmethod
+    async def _get_time_rule_config(data: dict = None):
+        return {
+            "rule_type": "time_offset_mask",
+            "format": data.get("format"),
+            "time_offset": {
+                "min": "-02:00:00",
+                "max": "02:00:00",
+            }
+        }

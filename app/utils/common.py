@@ -1,4 +1,5 @@
 import re
+import random
 
 from fastapi import UploadFile
 
@@ -22,3 +23,20 @@ def to_python_format(format_str: str) -> str:
         lambda m: FORMAT_MAP[m.group()],
         format_str,
     )
+
+
+def to_seconds(value: str) -> int:
+    sign = -1 if value.startswith("-") else 1
+    value = value.lstrip("-")
+
+    h, m, s = map(int, value.split(":"))
+    return sign * (h * 3600 + m * 60 + s)
+
+
+def random_second(start: str, end: str) -> int:
+    start_seconds = to_seconds(start)
+    end_seconds = to_seconds(end)
+
+    seconds = random.randint(start_seconds, end_seconds)
+
+    return seconds

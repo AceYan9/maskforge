@@ -1,17 +1,21 @@
+from app.config import settings
 from app.utils.recognizer.engine import RecognizerEngine
-
 from app.utils.recognizer.plugins.phone import PhoneRecognizer
 from app.utils.recognizer.plugins.email import EmailRecognizer
 from app.utils.recognizer.plugins.id_card import IDCardRecognizer
 from app.utils.recognizer.plugins.date import DateRecognizer, TimeRecognizer
 
 
+recognizers = [
+    PhoneRecognizer,
+    EmailRecognizer,
+    IDCardRecognizer,
+    DateRecognizer,
+    TimeRecognizer,
+]
 engine = RecognizerEngine()
-engine.register(PhoneRecognizer())
-engine.register(EmailRecognizer())
-engine.register(IDCardRecognizer())
-engine.register(DateRecognizer())
-engine.register(TimeRecognizer())
+for recognizer_cls in recognizers:
+    engine.register(recognizer_cls())
 
 
 class RuleAnalyzer:
@@ -31,7 +35,7 @@ class RuleAnalyzer:
 
     async def _get_recommended_rule_config(self, recognize_data: dict) -> dict:
         recognize_type = recognize_data.get("type")
-        if recognize_data.get("confidence") < 0.95:
+        if recognize_data.get("confidence") < settings.RECOGNIZE_CONFIDENCE_THRESHOLD:
             return {}
 
         func = getattr(self, f"_get_{recognize_type}_rule_config")

@@ -1,4 +1,5 @@
 import json
+import random
 import logging
 import pandas as pd
 
@@ -9,6 +10,8 @@ from app.models import Task, TaskStatus
 from app.utils.s3 import get_file
 from app.utils.exception_handler import BizException
 from app.utils.rule_engine import MaskEngine
+from app.utils.common import random_second, to_seconds
+from app.utils.const import DATE_FORMATS, TIME_FORMATS, DATE_TIME_FORMATS
 
 logger = logging.getLogger(__name__)
 
@@ -61,3 +64,27 @@ class TaskPreviewCommand:
         rule_headers = list(k for k in self._rules)
         if not set(rule_headers).issubset(set(headers)):
             raise BizException("Wrong rule headers")
+
+        for _, rule in self._rules.items():
+            if rule.get("rule_type") == "date_offset_mask":
+                date_format = rule.get("format")
+                if date_format not in DATE_FORMATS + DATE_TIME_FORMATS:
+                    raise BizException("Wrong date format")
+                if not (date_offset := rule.get("date_offset")):
+                    raise BizException("Lack of date offset config")
+                if (min_v := date_offset.get("min")) is None or (max_v := date_offset.get("max") ) is None:
+                    raise BizException("Error date offset config")
+                if min_v > max_v:
+                    raise BizException("The minimum value cannot be greater than the maximum value")
+                rule["date_offset_val"] = random.randint(min_v, max_v)
+            elif rule.get("rule_type") == "time_offset_mask":
+                time_format = rule.get("format")
+                if time_format not in TIME_FORMATS:
+                    raise BizException("Wrong time format")
+                if not (time_offset := rule.get("time_offset")):
+                    raise BizException("Lack of time offset config")
+                if (min_v := time_offset.get("min")) is None or (max_v := time_offset.get("max") ) is None:
+                    raise BizException("Error time offset config")
+                if to_seconds(min_v) > to_seconds(max_v):
+                    raise BizException("The minimum value cannot be greater than the maximum value")
+                rule["time_offset_val"] = random_second(min_v, max_v)

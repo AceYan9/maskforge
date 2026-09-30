@@ -12,8 +12,8 @@ class DateTimeRecognizer(BaseRecognizer):
     def parse(self,value):
         for fmt in self.formats:
             try:
-                fmt = to_python_format(fmt)
-                datetime.strptime(value, fmt)
+                run_fmt = to_python_format(fmt)
+                datetime.strptime(value, run_fmt)
                 return fmt
             except ValueError:
                 pass

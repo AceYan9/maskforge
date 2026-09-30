@@ -63,5 +63,7 @@ class Settings:
     FILE_SAMPLE_MAX_SIZE = 100
     MASK_HASH_SALT = os.getenv("MASK_HASH_SALT", "")
 
+    RECOGNIZE_CONFIDENCE_THRESHOLD = 0.95
+
 
 settings = Settings()

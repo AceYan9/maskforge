@@ -1,6 +1,9 @@
+from app.config import settings
+
+
 class RecognizerEngine:
 
-    def __init__(self, plugins=None, threshold=0.95):
+    def __init__(self, plugins=None, threshold=settings.RECOGNIZE_CONFIDENCE_THRESHOLD):
         self.threshold = threshold
         self.plugins = plugins or []
 

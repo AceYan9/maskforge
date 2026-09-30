@@ -19,8 +19,9 @@ class RightMaskRule(MaskRule):
         count = config.get("count", 1)
         char = config.get("mask_char", "*")
 
-        mask_count = min(count, len(mask_value))
-        masked_value = mask_value[:mask_count] + char * mask_count
+        length = len(mask_value)
+        mask_count = min(count, length)
+        masked_value = mask_value[:(length-mask_count)] + char * mask_count
         if not unchange_value:
             return masked_value
         return (masked_value + anchor + unchange_value) if anchor_side == "left" else (unchange_value + anchor + masked_value)

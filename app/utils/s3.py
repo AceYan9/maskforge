@@ -1,6 +1,7 @@
 import io
 import json
 from contextlib import contextmanager
+import pandas as pd
 
 from minio import Minio
 from fastapi import UploadFile, File
@@ -65,3 +66,20 @@ async def submit_analysis_data(task_id: str, data: list | dict, filename: str):
         content_type="application/json",
     )
     return object_name
+
+
+async def upload_run_result(task_id: str, data: pd.DataFrame, filename: str):
+    buffer = io.BytesIO()
+    with pd.ExcelWriter(buffer, engine="openpyxl") as writer:
+        data.to_excel(writer, index=False)
+
+    buffer.seek(0)
+
+    object_name = f"{task_id}/result/{filename}"
+    client.put_object(
+        settings.MINIO_BUCKET,
+        object_name,
+        buffer,
+        length=buffer.getbuffer().nbytes,
+        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )

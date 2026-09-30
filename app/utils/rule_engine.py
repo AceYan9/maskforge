@@ -14,7 +14,7 @@ class MaskEngine:
             if column not in result.columns:
                 continue
 
-            logger.info(f"{column=} {result[column]=} {rule=}")
+            logger.info(f"{column=} {len(result[column])=} {rule=}")
             result[column] = result[column].apply(lambda x: self.apply_value(x, rule))
 
         return result

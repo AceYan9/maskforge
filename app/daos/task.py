@@ -4,10 +4,10 @@ import logging
 
 from fastapi import UploadFile
 
-from app.models import Task, MaskRule
+from app.models import Task, MaskRule, TaskRun
 from app.utils.common import get_file_size
 from app.utils.s3 import upload_files, get_file
-from app.utils.async_tasks import process_file
+from app.utils.async_tasks import process_file, mask_run
 
 logger = logging.getLogger(__name__)
 
@@ -92,3 +92,25 @@ class TaskDAO:
                 task_id=task.task_id,
                 rules=rules,
             )
+
+
+class TaskRunDAO:
+
+    @classmethod
+    async def create_task_run(cls, task_id: str, rules: dict):
+        run_id = await cls.generate_run_id()
+        await TaskRun.create(
+            run_id=run_id,
+            task_id=task_id,
+            rules=rules,
+        )
+        mask_run.delay(run_id)
+
+        return run_id
+
+    @staticmethod
+    async def generate_run_id():
+        while 1:
+            run_id = uuid.uuid4().hex
+            if not await TaskRun.get_or_none(run_id=run_id):
+                return run_id

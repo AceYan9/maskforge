@@ -9,6 +9,12 @@ class TaskStatus(StrEnum):
     READY = "ready"
 
 
+class TaskRunStatus(StrEnum):
+    RUNNING = "running"
+    SUCCESS = "success"
+    FAILED = "failed"
+
+
 class BaseModel(models.Model):
     created_at = fields.DatetimeField(auto_now_add=True)
     updated_at = fields.DatetimeField(auto_now=True)
@@ -33,3 +39,12 @@ class Task(BaseModel):
 class MaskRule(BaseModel):
     task_id = fields.CharField(max_length=32, unique=True)
     rules = fields.JSONField()
+
+
+class TaskRun(BaseModel):
+    run_id = fields.CharField(max_length=32, unique=True)
+    user_id = fields.BigIntField(null=True, default=None)
+    task_id = fields.CharField(max_length=32)
+    rules = fields.JSONField()
+    status = fields.CharField(max_length=32, default=TaskRunStatus.RUNNING)
+

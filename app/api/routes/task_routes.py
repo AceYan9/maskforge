@@ -5,7 +5,7 @@ from fastapi import APIRouter, UploadFile, Depends
 from app.api.deps.task import validate_excel_file, get_task_obj
 from app.api.schema.common import ApiResponse
 from app.api.schema.task import PreviewMaskSchema
-from app.commands.task import TaskCreateCommand, TaskDetailCommand, TaskPreviewCommand
+from app.commands.task import TaskCreateCommand, TaskDetailCommand, TaskPreviewCommand, TaskRunCommand
 from app.models import Task
 
 logger = logging.getLogger(__name__)
@@ -31,3 +31,10 @@ async def preview_mask(body_data: PreviewMaskSchema, task: Task = Depends(get_ta
     command = TaskPreviewCommand(task, body_data.rules)
     data = await command.run()
     return {"data": data}
+
+
+@router.post("/{task_id}/run/", response_model=ApiResponse, summary="Preview mask result")
+async def preview_mask(body_data: PreviewMaskSchema, task: Task = Depends(get_task_obj)):
+    command = TaskRunCommand(task, body_data.rules)
+    run_id = await command.run()
+    return {"data": {"run_id": run_id}}

@@ -5,7 +5,7 @@ import pandas as pd
 
 from fastapi import UploadFile
 
-from app.daos.task import TaskDAO
+from app.daos.task import TaskDAO, TaskRunDAO
 from app.models import Task, TaskStatus
 from app.utils.s3 import get_file
 from app.utils.exception_handler import BizException
@@ -43,19 +43,10 @@ class TaskDetailCommand:
         pass
 
 
-class TaskPreviewCommand:
+class TaskRuleCommand:
     def __init__(self, task: Task, rules: dict):
         self._task = task
         self._rules = rules
-
-    async def run(self):
-        await self.validate()
-        await TaskDAO.upsert_mask_rule(self._task, self._rules)
-        with get_file(f"{self._task.task_id}/analysis/sample.json") as obj:
-            sample_data = json.loads(obj.read().decode("utf-8"))
-            df = pd.DataFrame(sample_data)
-            preview_data = MaskEngine().apply_dataframe(df, self._rules)
-        return preview_data.to_dict(orient="records")
 
     async def validate(self):
         with get_file(f"{self._task.task_id}/analysis/header.json") as obj:
@@ -70,21 +61,43 @@ class TaskPreviewCommand:
                 date_format = rule.get("format")
                 if date_format not in DATE_FORMATS + DATE_TIME_FORMATS:
                     raise BizException("Wrong date format")
-                if not (date_offset := rule.get("date_offset")):
-                    raise BizException("Lack of date offset config")
+                config_key = "date_offset"
+                if not (date_offset := rule.get(config_key)):
+                    raise BizException(f"Lack of {config_key} config")
                 if (min_v := date_offset.get("min")) is None or (max_v := date_offset.get("max") ) is None:
-                    raise BizException("Error date offset config")
+                    raise BizException(f"Error {config_key} config")
                 if min_v > max_v:
                     raise BizException("The minimum value cannot be greater than the maximum value")
-                rule["date_offset_val"] = random.randint(min_v, max_v)
+                rule[f"{config_key}_val"] = random.randint(min_v, max_v)
             elif rule.get("rule_type") == "time_offset_mask":
                 time_format = rule.get("format")
                 if time_format not in TIME_FORMATS:
                     raise BizException("Wrong time format")
-                if not (time_offset := rule.get("time_offset")):
-                    raise BizException("Lack of time offset config")
+                config_key = "time_offset"
+                if not (time_offset := rule.get(config_key)):
+                    raise BizException(f"Lack of {config_key} config")
                 if (min_v := time_offset.get("min")) is None or (max_v := time_offset.get("max") ) is None:
-                    raise BizException("Error time offset config")
+                    raise BizException(f"Error {config_key} config")
                 if to_seconds(min_v) > to_seconds(max_v):
                     raise BizException("The minimum value cannot be greater than the maximum value")
-                rule["time_offset_val"] = random_second(min_v, max_v)
+                rule[f"{config_key}_val"] = random_second(min_v, max_v)
+
+
+class TaskPreviewCommand(TaskRuleCommand):
+
+    async def run(self):
+        await self.validate()
+        await TaskDAO.upsert_mask_rule(self._task, self._rules)
+        with get_file(f"{self._task.task_id}/analysis/sample.json") as obj:
+            sample_data = json.loads(obj.read().decode("utf-8"))
+            df = pd.DataFrame(sample_data)
+            preview_data = MaskEngine().apply_dataframe(df, self._rules)
+        return preview_data.to_dict(orient="records")
+
+
+class TaskRunCommand(TaskRuleCommand):
+
+    async def run(self):
+        await self.validate()
+        run_id = await TaskRunDAO.create_task_run(self._task.task_id, self._rules)
+        return run_id

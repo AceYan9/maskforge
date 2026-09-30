@@ -1,11 +1,14 @@
+import math
 import json
 import uuid
 import logging
+from datetime import timedelta
 
 from fastapi import UploadFile
 
+from app.core.context import current_timezone
 from app.models import Task, MaskRule, TaskRun
-from app.utils.common import get_file_size
+from app.utils.common import get_file_size, get_timezone_offset
 from app.utils.s3 import upload_files, get_file
 from app.utils.async_tasks import process_file, mask_run
 
@@ -114,3 +117,24 @@ class TaskRunDAO:
             run_id = uuid.uuid4().hex
             if not await TaskRun.get_or_none(run_id=run_id):
                 return run_id
+
+    @staticmethod
+    async def get_run_list(task_id: str, page: int, page_size: int):
+        timezone_offset = get_timezone_offset(current_timezone.get())
+        query = TaskRun.filter(task_id=task_id, deleted_at=None).order_by("-created_at")
+        total = await query.count()
+        run_list = await query.offset((page - 1) * page_size).limit(page_size)
+        return {
+            "total": total,
+            "page": page,
+            "page_size": page_size,
+            "total_pages": math.ceil(total / page_size),
+            "list": [
+                {
+                    "run_id": item.run_id,
+                    "status": item.status,
+                    "created_at": (item.created_at + timedelta(hours=timezone_offset)).strftime("%Y-%m-%d %H:%M:%S") if item.created_at else None,
+                }
+                for item in run_list
+            ]
+        }

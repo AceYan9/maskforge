@@ -101,3 +101,13 @@ class TaskRunCommand(TaskRuleCommand):
         await self.validate()
         run_id = await TaskRunDAO.create_task_run(self._task.task_id, self._rules)
         return run_id
+
+
+class TaskRunListCommand:
+    def __init__(self, task_id: str, page: int, page_size: int):
+        self._task_id = task_id
+        self._page = page
+        self._page_size = page_size
+
+    async def run(self):
+        return await TaskRunDAO.get_run_list(self._task_id, self._page, self._page_size)

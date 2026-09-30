@@ -11,6 +11,7 @@ from tortoise.contrib.fastapi import register_tortoise
 
 from app.api.main import api_router
 from app.config import settings
+from app.core.context import current_timezone
 from app.logging_config import LOGGING_CONFIG, request_id_ctx
 from app.utils.exception_handler import BizException
 from app.utils.s3 import init_bucket
@@ -85,12 +86,18 @@ async def log_request_middleware(request: Request, call_next):
 
     logger.info(f"{request_info} - Query: {query_params}, Path: {path_params}, Body: {body}")
 
-    response = await call_next(request)
-
     process_time = (time.time() - start_time) * 1000
     logger.info(f"{request_info} - Process time: {process_time:.2f}ms")
 
-    return response
+    token = current_timezone.set(
+        request.headers.get("X-Timezone", "UTC")
+    )
+
+    try:
+        return await call_next(request)
+    finally:
+        current_timezone.reset(token)
+
 
 @app.exception_handler(BizException)
 async def global_exception_handler(request: Request, exc: BizException):

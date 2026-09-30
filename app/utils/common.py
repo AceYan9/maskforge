@@ -1,5 +1,7 @@
 import re
 import random
+from datetime import datetime
+from zoneinfo import ZoneInfo, ZoneInfoNotFoundError
 
 from fastapi import UploadFile
 
@@ -40,3 +42,11 @@ def random_second(start: str, end: str) -> int:
     seconds = random.randint(start_seconds, end_seconds)
 
     return seconds
+
+
+def get_timezone_offset(timezone: str) -> int:
+    try:
+        offset = datetime.now(ZoneInfo(timezone)).utcoffset()
+        return int(offset.total_seconds() / 3600)
+    except ZoneInfoNotFoundError:
+        return 0

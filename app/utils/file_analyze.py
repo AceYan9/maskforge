@@ -6,7 +6,7 @@ import shutil
 import xlrd
 
 from app.config import settings
-from app.utils.minio import get_file
+from app.utils.s3 import get_file
 
 
 class FileAnalyzer:
@@ -25,7 +25,7 @@ class FileAnalyzer:
             total_columns = 0
 
             with tempfile.NamedTemporaryFile(suffix=".csv", delete=True) as tmp:
-                # MinIO流复制到临时文件
+                # S3文件流复制到临时文件
                 shutil.copyfileobj(obj, tmp)
                 # 确保数据写入磁盘
                 tmp.flush()

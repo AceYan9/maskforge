@@ -1,6 +1,5 @@
 import io
 import json
-from typing import Any
 from contextlib import contextmanager
 
 from minio import Minio

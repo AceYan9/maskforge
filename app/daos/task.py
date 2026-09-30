@@ -6,7 +6,7 @@ from fastapi import UploadFile
 
 from app.models import Task, MaskRule
 from app.utils.common import get_file_size
-from app.utils.minio import upload_files, get_file
+from app.utils.s3 import upload_files, get_file
 from app.utils.async_tasks import process_file
 
 logger = logging.getLogger(__name__)
@@ -65,3 +65,14 @@ class TaskDAO:
         data["recommended_rule"] = {header: recommended_rule.get(header) or {} for header in headers}
 
         return data
+
+    @staticmethod
+    async def upsert_mask_rule(task: Task, rules: dict):
+        if mask_rule := await MaskRule.get_or_none(task_id=task.task_id):
+            mask_rule.rules = rules
+            await mask_rule.save()
+        else:
+            await MaskRule.create(
+                task_id=task.task_id,
+                rules=rules,
+            )

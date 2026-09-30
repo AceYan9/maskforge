@@ -3,7 +3,7 @@ import asyncio
 from app.celery_app import celery_app, BaseTask
 from app.models import Task, TaskStatus
 from app.utils.file_analyze import FileAnalyzer
-from app.utils.minio import submit_analysis_data
+from app.utils.s3 import submit_analysis_data
 from app.utils.rule_analyze import RuleAnalyzer
 
 

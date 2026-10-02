@@ -46,6 +46,27 @@ class TaskDAO:
         return task_id
 
     @staticmethod
+    async def task_list(page: int = 1, page_size: int = 10):
+        timezone_offset = get_timezone_offset(current_timezone.get())
+        query = Task.filter(deleted_at=None).order_by("-created_at")
+        total = await query.count()
+        task_list = await query.offset((page - 1) * page_size).limit(page_size)
+        return {
+            "total": total,
+            "page": page,
+            "page_size": page_size,
+            "total_page": math.ceil(total / page_size),
+            "list": [
+                {
+                    "task_id": item.task_id,
+                    "status": item.status,
+                    "created_at": (item.created_at + timedelta(hours=timezone_offset)).strftime("%Y-%m-%d %H:%M:%S") if item.created_at else None,
+                }
+                for item in task_list
+            ]
+        }
+
+    @staticmethod
     async def get_task_detail(task: Task):
         data = {
             "status": task.status,

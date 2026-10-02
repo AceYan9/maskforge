@@ -5,7 +5,9 @@ from fastapi import APIRouter, UploadFile, Depends, Query
 from app.api.deps.task import validate_excel_file, get_task_obj
 from app.api.schema.common import ApiResponse
 from app.api.schema.task import PreviewMaskSchema
-from app.commands.task import TaskCreateCommand, TaskDetailCommand, TaskPreviewCommand, TaskRunCommand, TaskRunListCommand
+from app.commands.task import (
+    TaskCreateCommand, TaskDetailCommand, TaskPreviewCommand, TaskRunCommand, TaskRunListCommand, TaskListCommand
+)
 from app.models import Task
 
 logger = logging.getLogger(__name__)
@@ -17,6 +19,13 @@ async def upload_file(file: UploadFile = Depends(validate_excel_file)):
     command = TaskCreateCommand(file)
     task_id = await command.run()
     return {"data": {"task_id": task_id}}
+
+
+@router.get("/", response_model=ApiResponse, summary="Get task list")
+async def task_list(page: int = Query(1, ge=1), page_size: int = Query(10, ge=1, le=100)):
+    command = TaskListCommand(page, page_size)
+    data = await command.run()
+    return {"data": data}
 
 
 @router.get("/{task_id}/", response_model=ApiResponse, summary="Get task detail")

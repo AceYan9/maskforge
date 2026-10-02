@@ -28,6 +28,15 @@ class TaskCreateCommand:
         pass
 
 
+class TaskListCommand:
+    def __init__(self, page: int, page_size: int):
+        self._page = page
+        self._page_size = page_size
+
+    async def run(self):
+        return await TaskDAO.task_list(self._page, self._page_size)
+
+
 class TaskDetailCommand:
     def __init__(self, task: Task):
         self._task = task

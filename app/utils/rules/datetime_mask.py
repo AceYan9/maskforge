@@ -45,7 +45,6 @@ def _handle_date_or_time_mask(value, config):
     return _mask_indexes(hide_indexes)
 
 
-
 @register("date_mask")
 class DateMaskRule(MaskRule):
 

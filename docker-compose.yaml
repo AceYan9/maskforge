@@ -1,0 +1,62 @@
+services:
+
+  postgres:
+    image: postgres:17
+    container_name: maskforge-postgres
+    env_file:
+      - .env
+    ports:
+      - "25432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  minio:
+    image: elestio/minio
+    container_name: maskforge-minio
+    command: server /data --console-address ":9001"
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    env_file:
+      - .env
+    volumes:
+      - minio_data:/data
+
+  redis:
+    image: redis:7
+    container_name: maskforge-redis
+    ports:
+      - "26379:6379"
+
+  app:
+    container_name: maskforge-app
+    build: .
+    working_dir: /app
+    command: >
+      sh -c "aerich upgrade && python -m uvicorn app.main:app --host 0.0.0.0 --port 8808"
+    ports:
+      - "9909:8808"
+    restart: always
+    env_file:
+      - .env
+    depends_on:
+      - postgres
+      - minio
+      - redis
+
+  worker:
+    container_name: maskforge-worker
+    build: .
+    working_dir: /app
+    command:
+      celery -A app.celery_app.celery_app worker -l info
+    env_file:
+      - .env
+    depends_on:
+      - redis
+      - postgres
+
+
+volumes:
+  postgres_data:
+  minio_data:
